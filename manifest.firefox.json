@@ -1,0 +1,89 @@
+{
+    "manifest_version": 3,
+    "name": "OttoMatic Browser Recorder",
+    "version": "1.0.0.0",
+    "description": "Records your browser actions as ready-to-edit GPAL C# automation code, with robust CSS/XPath selectors and element screenshots.",
+
+    "icons": {
+        "16": "images/robot-16.png",
+        "48": "images/robot-48.png",
+        "128": "images/robot-128.png"
+    },
+
+    "action": {
+        "default_icon": "images/robot-16.png",
+        "default_popup": "source/_popup.html",
+        "default_title": "Ottomatic"
+    },
+
+    "background": {
+        "scripts": [
+            "source/Globals.js",
+            "source/Settings.js",
+            "source/Constants.js",
+            "source/Persistence.js",
+            "source/GPALToast.js",
+            "source/Logging.js",
+            "source/EventHandlers.js",
+            "source/Messaging.js",
+            "source/SelectorSet.js",
+            "source/WorkflowStep.js",
+            "source/Tabs.js",
+            "source/ContextMenu.js",
+            "source/ImageHelper.js",
+            "source/_background.js"
+        ]
+    },
+
+    "content_scripts": [
+        {
+            "all_frames": true,
+            "css": [ "source/_content.css" ],
+            "js": [
+                "source/Globals.js",
+                "source/Settings.js",
+                "source/Persistence.js",
+                "source/GPALToast.js",
+                "source/EventHandlers.js",
+                "source/DragNDrop.js",
+                "source/WorkflowStep.js",
+                "source/Tabs.js",
+                "source/Messaging.js",
+                "source/SelectorSet.js",
+                "source/Constants.js",
+                "source/Logging.js",
+                "source/ContextMenu.js",
+                "source/ImageHelper.js",
+                "source/_content.js",
+                "source/_icons.js",
+                "source/libraries/JSZip.js",
+                "source/ZipHelper.js"
+            ],
+            "matches": [ "*://*/*", "file:///*" ]
+        }
+    ],
+
+    "permissions": [
+        "activeTab",
+        "clipboardWrite",
+        "contextMenus",
+        "nativeMessaging",
+        "notifications",
+        "storage",
+        "tabs",
+        "unlimitedStorage",
+        "webNavigation"
+    ],
+
+    "host_permissions": [ "<all_urls>" ],
+
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "ottomatic@sditx.com",
+            "strict_min_version": "142.0",
+            "data_collection_permissions": {
+                "required": [ "none" ]
+            }
+        }
+    }
+}

@@ -1,0 +1,65 @@
+﻿{
+    "action": {
+        "default_icon": "images/robot-16.png",
+        "default_popup": "source/_popup.html",
+        "default_title": "OttoMatic Browser Recorder"
+    },
+    "background": {
+        "service_worker": "source/_background.js"
+    },
+    "content_scripts": [
+        {
+            "all_frames": true,
+            "css": [ "source/_content.css" ],
+            "js": [
+                "source/Globals.js",
+                "source/Settings.js",
+                "source/Persistence.js",
+                "source/GPALToast.js",
+                "source/EventHandlers.js",
+                "source/DragNDrop.js",
+                "source/WorkflowStep.js",
+                "source/Tabs.js",
+                "source/Messaging.js",
+                "source/SelectorSet.js",
+                "source/Constants.js",
+                "source/Logging.js",
+                "source/ContextMenu.js",
+                "source/ImageHelper.js",
+                "source/_content.js",
+                "source/_icons.js",
+                "source/libraries/JSZip.js",
+                "source/ZipHelper.js"
+            ],
+            "matches": [ "*://*/*", "file:///*" ]
+        }
+    ],
+    "content_security_policy": {
+        "script-src": "self",
+        "object-src": "self"
+    },
+    "description": "Records your browser actions as ready-to-edit GPAL C# automation code, with robust CSS/XPath selectors and element screenshots.",
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "icons": {
+        "16": "images/robot-16.png",
+        "48": "images/robot-48.png",
+        "128": "images/robot-128.png"
+    },
+    "manifest_version": 3,
+    "name": "OttoMatic",
+    "permissions": [
+        "contextMenus",
+        "notifications",
+        "storage",
+        "tabs",
+        "unlimitedStorage",
+        "activeTab",
+        "nativeMessaging",
+        "clipboardWrite",
+        "webNavigation"
+    ],
+    "version": "1.0.0.0",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgujfMgQgAl2sGo0ssqUvGLb1m3WuwYu4UDM7ijfV7pcppPBwIedI5yX4rp5zoSP1cVDpF9yiMjb6qmP8GgweFf1XSDT2AHKhAlOAhXOSslUO1tIZPg1TZnVMmIeZMiHJQvVcFJb/lHedRqq5oF1HtYQ2lJ4cTu52UxNS7hVQMQug2xe47bKjEHFWiGuRJ04ihzqo7ClaxCxAybRuIZZ6lK+128mv6PAxtMU3nJtOT9lXUSDO/o0kWg2OPKo1xNH3gqdfQRJTOFr6Vr/VLXpESSGZD5hWM4ufmywCwSvH7BGF5pv+PbXf+k4/LZeG7icDJthLHNClJ0d9MdjslYllywIDAQAB"
+}

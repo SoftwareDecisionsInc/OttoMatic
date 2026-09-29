@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+
+<html lang="en" id="htmlLevel1">
+
+<head id="headLevel1">
+    <title>Ottomatic</title>
+    <link rel="stylesheet" href="index.css" />
+    <meta charset="utf-8" />
+</head>
+
+<body id="bodyLevel1">
+    <p>iframe_level_1.html</p>
+
+    <script>
+        customElements.define("innocent-custom-element", class extends HTMLElement {
+            connectedCallback() {
+                const shadow = this.attachShadow({ mode: "open" });
+                shadow.innerHTML = `
+                    <link rel="stylesheet" href="index.css" />
+                    <p>&lt;innocent-custom-element&gt;</p>
+                    <iframe id="frameLevel2" src="iframe_level_2.html"></iframe>
+                `;
+            }
+        });
+    </script>
+
+    <innocent-custom-element id="theInnocentCustomElement"></innocent-custom-element>
+</body>
+
+</html>
