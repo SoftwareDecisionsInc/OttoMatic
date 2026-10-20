@@ -13,6 +13,7 @@ function init() {
 				updateViewState();
 				updateSettings();
 				updateOutput();
+				updateServerPort();
 			});
 		}
 	});
@@ -51,6 +52,7 @@ function init() {
 		updateViewState();
 		updateSettings();
 		updateOutput();
+		updateServerPort();
 	});
 
 	// add click event listener
@@ -101,6 +103,13 @@ async function hideDevelopmentOnlyControls() {
 		buttonReload.classList.add("hidden");
 }
 
+// Shows the port the GPAL REST API reported over the native pipe; "--" until it connects and pushes one.
+function updateServerPort() {
+	const port = persistence.serverPort;
+	spanServerPort.textContent = port ? port : "--";
+	spanServerPort.classList.toggle("disconnected", !port);
+}
+
 // this gets fired first in updateSettingsInterface as type=select-one
 // TODO: dynamically move the toast away from the current element so it will not get in a screenshot.
 function updateToastPosition(event) {
@@ -131,6 +140,10 @@ function toggleSettingsOrOutput(objectEvent) {
 			break;
 		case "settings":
 			persistence.viewMode = "output";
+
+			// The output is built from the settings, and changing one saves it without rebuilding the output
+			// (the popup's own save is not reported back to it), so WithImage and the rest show on the way back.
+			updateOutput();
 			break;
 	}
 	Persistence.savePersistence();
@@ -299,8 +312,6 @@ function updateSettingsInterface(objectEvent) {
 			if ('darkMode' === objectEvent.target.id)
 				toggleDarkMode();
 			else {
-				if ('runApi' === objectEvent.target.id)
-					LogMessage(LOG_TYPE.NOTICE, "Reload OttoMatic to affect change.");
 				//updateViewState();
 				updateSettings();
 				//updateOutput();

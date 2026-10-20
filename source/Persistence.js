@@ -33,9 +33,12 @@ class Persistence {
         this.elementToUpdateSelectorName = '';   // when we click on updating image 'host' link, we want to get info on startup and request a snapshot and then close
         this.selectorNamesToUpdate = [];         // queue of selectorNames for "Update All Missing" — processed one per page navigation
 
+        // Port the GPAL REST API reported over the native pipe (REQUEST.SET_PORT); null while it has no listener.
+        // Display only -- GPAL Studio finds the API itself in Connect mode.
+        this.serverPort = null;
+
         this.savedByID = null;
         this.timestamp = Date().toLocaleString();
-        this.getOneSelector = false;
     }
 
     //method to reload persistence object
@@ -355,6 +358,20 @@ class Variable {
                 variableFound = true;
         });
         return variableFound;
+    }
+
+    // The variables a workflow's output declares. With .WithImage off the selectors carry no images, so the image
+    // files are left out too. An AndDownload step names its file the same way (<selectorName>File), and that one is
+    // still used, so it stays.
+    static forOutput(workflow, withImage) {
+        const downloadVariables = workflow
+            .filter(step => workflowActions.AndDownload === step.action)
+            .map(step => step.variableName);
+
+        return persistence.variables.filter(variable =>
+            true == withImage
+            || VariableType.GPALFile !== variable.type
+            || downloadVariables.includes(variable.name));
     }
 
     static DeleteVariable(variableName) {

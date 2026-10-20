@@ -8,7 +8,7 @@ pages used to exercise it, including nested iframes.
 
 ## This repository
 
-This is the read-only public release mirror of OttoMatic version 1.0.0.0, taken from release commit `646ab48` of
+This is the read-only public release mirror of OttoMatic version 1.0.0.1, taken from release commit `3ec2476` of
 the private OttoMatic browser extension repository. Development happens privately, and pull requests are not accepted here.
 
 ## License

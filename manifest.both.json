@@ -2,7 +2,7 @@
     "action": {
         "default_icon": "images/robot-16.png",
         "default_popup": "source/_popup.html",
-        "default_title": "OttoMatic Browser Recorder"
+        "default_title": "Ottomatic"
     },
     "background": {
         "service_worker": "source/_background.js"
@@ -60,6 +60,5 @@
         "clipboardWrite",
         "webNavigation"
     ],
-    "version": "1.0.0.0",
-    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgujfMgQgAl2sGo0ssqUvGLb1m3WuwYu4UDM7ijfV7pcppPBwIedI5yX4rp5zoSP1cVDpF9yiMjb6qmP8GgweFf1XSDT2AHKhAlOAhXOSslUO1tIZPg1TZnVMmIeZMiHJQvVcFJb/lHedRqq5oF1HtYQ2lJ4cTu52UxNS7hVQMQug2xe47bKjEHFWiGuRJ04ihzqo7ClaxCxAybRuIZZ6lK+128mv6PAxtMU3nJtOT9lXUSDO/o0kWg2OPKo1xNH3gqdfQRJTOFr6Vr/VLXpESSGZD5hWM4ufmywCwSvH7BGF5pv+PbXf+k4/LZeG7icDJthLHNClJ0d9MdjslYllywIDAQAB"
+    "version": "1.0.0.1"
 }

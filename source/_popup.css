@@ -1189,3 +1189,36 @@ ul {
 #fieldsetGUI input[type="checkbox"] {
     margin-right: 5px;
 }
+#divServerPort {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-left: 10px;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+    #spanServerPortLabel {
+        color: #888888;
+        letter-spacing: 0.5px;
+    }
+
+    #spanServerPort {
+        font-weight: bold;
+        color: #333333;
+    }
+
+    /* no port: the API is off or has not reported one yet */
+    #spanServerPort.disconnected {
+        font-weight: normal;
+        color: #b00020;
+    }
+
+.dark-mode #spanServerPort {
+    color: #00bbdc;
+}
+
+.dark-mode #spanServerPort.disconnected {
+    color: #ff6b6b;
+}

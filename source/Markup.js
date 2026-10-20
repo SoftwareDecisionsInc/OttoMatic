@@ -8,7 +8,7 @@ async function outputAllMarkup(settings, Workflow) {
     allSelectorsOutput(settings, nonDuplicateSelectors);
     //only output the div-actions if div-selectors is not empty
     if (0 < Workflow.length) {
-        variablesOutput();
+        variablesOutput(settings, Workflow);
         gpalOutput(settings, gpalSettings);
         browserOutput(settings, browserSettings);
         workflowOutput(Workflow);
@@ -896,12 +896,14 @@ function exceptionInfoHandlersOutput(settings) {
         tempHTML += "</fieldset>";
     divActions.innerHTML += tempHTML;
 }
-function variablesOutput() {
-    if (0 < persistence.variables.length) {
+function variablesOutput(settings, Workflow) {
+    const variables = Variable.forOutput(Workflow, settings.withImage);
+
+    if (0 < variables.length) {
         let gpalClass = '';
         let instantiate = '';
         let tempHTML = '<fieldset class="fieldsetHandlers"><legend><span class="lightgreen-black-text">GPAL Variables</span></legend>';
-        let resultStrings = persistence.variables.map((variable) => {
+        let resultStrings = variables.map((variable) => {
             switch (variable.type) {
                 case VariableType.GPALFile:
                     gpalClass = "public static GPALFile";

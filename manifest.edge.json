@@ -2,7 +2,7 @@
     "action": {
         "default_icon": "images/robot-16.png",
         "default_popup": "source/_popup.html",
-        "default_title": "Ottomatic"
+        "default_title": "OttoMatic - GPAL Browser Recorder"
     },
     "background": {
         "service_worker": "source/_background.js"
@@ -60,6 +60,5 @@
         "clipboardWrite",
         "webNavigation"
     ],
-    "version": "0.9.9.6",
-    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwW1yurJAhKVnvCDjDzx4hRw3AGYk/Cd2zSEWvK/r611y62Ssg+SKSBhoU9PfzkPztCb/xmBFyCz8yFjjIRmHydtd3Hd3SCpthSEs7OeEdAtRaHEeLe0meB+1oKHHAmlkRFVHW7bwM5hpiDMymKinaZgbdAEF5mXh+E+vdym+DBBAyTsoSIXWBTYrINSxLkwqixPLwY5U5blgPd641z7LKMbZ/xusHq1qsO0ucXV9NiPqbdxNTlsjsHeEVZ/OnSrYcLyQ9m8rNmcyWe7a05QD1jcZAqp7O7REj1ArJe+Cl/ORHa2Vvu7OlvwQ1LGfwJZ8ArIeQ3X0b7dn7I5aUfF0TQIDAQAB"
+    "version": "1.0.0.1"
 }

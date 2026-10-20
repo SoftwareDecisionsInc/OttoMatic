@@ -57,27 +57,28 @@ class Messaging {
                 Messaging.sendToNativeApp(message);
                 break;
 
-            case REQUEST.GET_WORKFLOW:
-                var jsonWorkflow = persistence.Workflow.map(step => step);
-                var message = { message: REQUEST.SEND_WORKFLOW, workflow: jsonWorkflow };
-                Messaging.sendToNativeApp(message);
-                break;
+            case REQUEST.GET_WORKFLOW: {
+                // copies, so stripping images never touches the recorded workflow
+                const withImage = true == persistence.settings.withImage;
+                const workflow = structuredClone(persistence.Workflow);
 
-            case "started":
-                Messaging.sendToPopup({ message: 'apiStarted' });
-                break;
+                if (false == withImage)
+                    workflow.forEach(step => { if (step.selectorSet) step.selectorSet.imageData = ""; });
 
-            case "stopped":
-                Messaging.sendToPopup({ message: 'apiStopped' });
+                Messaging.sendToNativeApp({
+                    message: REQUEST.SEND_WORKFLOW,
+                    workflow: workflow,
+                    variables: Variable.forOutput(persistence.Workflow, withImage)
+                });
                 break;
-        }
-    }
+            }
 
-    static sendToPopup(command) {
-        try {
-            BROWSER.runtime.sendMessage(command);
-        } catch (err) {
-            showToast(err, "basic");
+            case REQUEST.SET_PORT:
+                // No reply: the pipe pairs one response to one request with no correlation id, so an ack here would
+                // be read as the answer to whatever GPAL has in flight.
+                persistence.serverPort = request.data?.port ?? null;
+                Persistence.savePersistence();
+                break;
         }
     }
 
@@ -338,19 +339,6 @@ class Messaging {
         debugLog(`[GPAL] bg received: ${message?.message ?? message} / persistence ${persistence ? 'loaded' : 'NOT LOADED'} / steps: ${persistence?.Workflow?.length}`);
         if (!message.message)
             switch (message) {
-                case REQUEST.START_API:
-                    Messaging.sendToNativeApp('start');
-                    sendToPopup({ message: 'apiStarted' }); // assume it worked fine, notify popup to change button
-                    break;
-
-                case REQUEST.STOP_API:
-                    Messaging.sendToNativeApp('stop');
-                    sendToPopup({ message: 'apiStopped' }); // assumed it worked fine, notify popup to change button
-                    break;
-
-                case REQUEST.QUERY_API:
-                    Messaging.sendToNativeApp('status');  // started or stopped read in readFromNativeApp
-                    break;
                 case 'die':
                     // the reload happens on the resulting disconnect
                     Messaging.sendToNativeApp('die');
@@ -459,9 +447,6 @@ class Messaging {
                 case REQUEST.COPY_SELECTED_TEXT:
                     Messaging.messageATab(Globals.currentTabID, Globals.currentContentID, message);
                     break;
-                case REQUEST.DELETE_WORKFLOWSTEP:
-                    WorkflowStep.deleteWorkflowStep(WorkflowStep.getLastWorkflowStep());
-                    break;
             }
         else {
             switch (message.message) {
@@ -479,9 +464,6 @@ class Messaging {
                         });
                     });
                     responseVal = true;
-                    break;
-                case REQUEST.RETAKE_IMAGE2:
-                    Messaging.messageATab(Globals.currentTabID, null, { message: REQUEST.RETAKE_IMAGE, data: message.data });    // ask one content script to do this for us. :)
                     break;
                 case REQUEST.CAPTURE_THEN_RESPOND:
                     /* Capture visible tab and respond directly with image data (used by clickThru to sequence screenshot before navigation) */
@@ -842,7 +824,9 @@ class Messaging {
                     functionSendResponse(RESPONSE.YES_IT_SEEMS_WE_CAN);
                     break;
                 case REQUEST.GET_SELECTOR:
-                    persistence.getOneSelector = true;
+                    // kept on Globals, not persistence: every persistence reload replaces persistence and would
+                    // drop it before the click
+                    Globals.getOneSelector = true;
                 case REQUEST.START_RECORDING:
                     /* If the message is a request to start recording user actions, 
                           set the "isRecording" flag to true in the persistence object */
@@ -857,16 +841,13 @@ class Messaging {
                     if (true == persistence.isRecording && window.self === window.top)
                         showToast(LOG_TYPE.RECORDING, `${toastStrong('STOPPED')}`);
                     persistence.isRecording = false;
+                    // the tab that got the one selector stops the rest; they must not send one on a later click
+                    Globals.getOneSelector = false;
                     functionSendResponse(true);
                     break;
                 case REQUEST.RELOAD_PERSISTENCE2:
                     // for whatever reasons, it takes 3 tries to sync persistence sometimes, could it be more if there are more iframes?
                     Persistence.reloadPersistence(true);
-                    functionSendResponse(true);
-                    break;
-                case REQUEST.OTTOMATIC_RELOAD:
-                    if (window.self === window.top)
-                        LogMessage(LOG_TYPE.WARN, `Ottomatic was reloaded.<br>${toastStrong('PLEASE REFRESH PAGE')}`);
                     functionSendResponse(true);
                     break;
                 case REQUEST.REMOVE_HIGHLIGHT:

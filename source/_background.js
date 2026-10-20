@@ -16,6 +16,12 @@ const clients = [];
 // reload. The reload brings up a fresh one, so the disconnect that follows must
 // not be treated as a failure to recover from.
 var nativeAppShuttingDown = false;
+// A native app that exits right after starting would otherwise be respawned forever. A connection that
+// lived NATIVE_HEALTHY_MS counts as good and resets the count.
+const NATIVE_RESPAWN_LIMIT = 3;
+const NATIVE_HEALTHY_MS = 10000;
+var nativeConnectedAt = 0;
+var nativeQuickFailures = 0;
 /*  Adds a listener to handle incoming messages */
 BROWSER.runtime.onMessage.addListener(Messaging.handleMessageForBackground);
 BROWSER.contextMenus.onClicked.addListener(GPALContextMenu.handleContextMenuItemClick);
@@ -105,7 +111,17 @@ async function init() {
         }
 
         debugLog(`[GPAL] bg reloading persistence, written by [${writer}]`);
+
+        // The popup's Run API checkbox is saved like any setting; starting or stopping the API follows the change,
+        // so it applies without restarting the browser.
+        const wasRunApi = persistence?.settings?.runApi;
         await Persistence.reloadPersistence(true);
+        const isRunApi = persistence.settings.runApi;
+
+        if (true == isRunApi && true != wasRunApi)
+            nativeInit();
+        else if (true != isRunApi && true == wasRunApi)
+            nativeStop();
     });
 
     const tabHistory = {};
@@ -199,6 +215,8 @@ async function init() {
     });
 
     await reloadPersistence();
+    // whatever port was saved belonged to a process from an earlier session
+    clearServerPort();
     if (true == persistence.settings.runApi)
         nativeInit();
 
@@ -219,6 +237,8 @@ async function init() {
 function nativeInit() {
     if (port == null) {
         port = BROWSER.runtime.connectNative('gpal.rest.api.nativeapp'); // launch server
+        nativeConnectedAt = Date.now();
+        nativeQuickFailures = 0;
         if (port !== null) {
             Messaging.port = port;
             port.onMessage.addListener(Messaging.readFromNativeApp);  // stdio reader of native messaging, 4 size bytes and then the payload
@@ -227,6 +247,28 @@ function nativeInit() {
         } else {
             offerRestApiDownload();
         }
+    }
+}
+
+// Tells the native app to exit, then lets go of the port. Our own disconnect() does not fire onDisconnect, so
+// restartRestServer will not respawn it. 'die' goes straight to the port: Messaging.sendToNativeApp('die') would
+// set nativeAppShuttingDown, which reloads the extension on disconnect.
+function nativeStop() {
+    if (port != null) {
+        port.postMessage('die');
+        port.onMessage.removeListener(Messaging.readFromNativeApp);
+        port.onDisconnect.removeListener(restartRestServer);
+        port.disconnect();
+        port = null;
+        Messaging.port = null;
+    }
+    clearServerPort();
+}
+
+function clearServerPort() {
+    if (persistence && persistence.serverPort != null) {
+        persistence.serverPort = null;
+        Persistence.savePersistence();
     }
 }
 
@@ -254,30 +296,49 @@ async function offerRestApiDownload() {
     });
 }
 
-function restartRestServer() {
+function restartRestServer(disconnectedPort) {
     // we asked the native app to die for a reload; reload on disconnect so the old process is gone first
     if (nativeAppShuttingDown) {
         BROWSER.runtime.reload();
         return;
     }
 
-    if (port !== null && true == persistence.settings.runApi) {
-        const err = BROWSER.runtime.lastError;
+    // the port died with the process; a replacement pushes its own, and it may not be the same one
+    clearServerPort();
 
-        if (err?.message === 'Specified native messaging host not found.') {
-            port.onMessage.removeListener(Messaging.readFromNativeApp);   // remove hooks in now defunct port
-            port.onDisconnect.removeListener(restartRestServer);
+    if (port !== null && true == persistence.settings.runApi) {
+        // Firefox reports on the port, Chrome on lastError
+        const errorMessage = disconnectedPort?.error?.message ?? BROWSER.runtime.lastError?.message;
+
+        port.onMessage.removeListener(Messaging.readFromNativeApp);   // remove hooks in now defunct port
+        port.onDisconnect.removeListener(restartRestServer);
+
+        if (errorMessage === 'Specified native messaging host not found.') {
             port = null;
             // connectNative returns a live port whether or not the host exists, so this is the only place
             // "not installed" is knowable.
             offerRestApiDownload();
             return;
         }
+
+        // this extension's ID is not in the host manifest's allowed_origins; retrying cannot fix that
+        if (errorMessage === 'Access to the specified native messaging host is forbidden.') {
+            port = null;
+            showNotification(LOG_TYPE.NOTICE, "GPAL REST API refused this extension\nIts ID is not in the native host manifest");
+            return;
+        }
+
+        nativeQuickFailures = Date.now() - nativeConnectedAt < NATIVE_HEALTHY_MS ? nativeQuickFailures + 1 : 0;
+        if (nativeQuickFailures >= NATIVE_RESPAWN_LIMIT) {
+            port = null;
+            showNotification(LOG_TYPE.NOTICE, `GPAL API Server keeps exiting${errorMessage ? ': ' + errorMessage : ''}\nNot restarting it`);
+            return;
+        }
+
         showNotification(LOG_TYPE.NOTICE, "GPAL API Server Disconnected\nRestarting server");
-        port.onMessage.removeListener(Messaging.readFromNativeApp);   // remove hooks in now defunct port
-        port.onDisconnect.removeListener(restartRestServer);
 
         port = BROWSER.runtime.connectNative('gpal.rest.api.nativeapp');
+        nativeConnectedAt = Date.now();
         Messaging.port = port;
         port.onMessage.addListener(Messaging.readFromNativeApp);
         port.onDisconnect.addListener(restartRestServer);

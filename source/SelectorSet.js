@@ -614,48 +614,16 @@ class SelectorSet {
             throw "isClassListUniqueAmongSiblings(): Element has unexpectedly been detached from its siblings.";
         }
 
-        let myClassList = me.classList;
-        if (!myClassList) {
-            return false;
-        }
+        // My classes, without our dashed outline.
+        let myClasses = Array.from(me.classList || []).filter(c => HIGHLIGHTED_BOX_SHADOW_ELEMENT_CLASS !== c);
 
-        // Loop through the siblings and compare their class lists to the element's class list.
-        let isMyClassListUniqueAmongSiblings = true;
+        // tag.class1.class2 matches every sibling of my tag that has all my classes, whatever else it has, so the
+        // classes name me alone only when I have some and no sibling of my tag has all of them. With no classes,
+        // the selector is the bare tag, which matches every sibling of my tag.
+        let isMyClassListUniqueAmongSiblings = 0 < myClasses.length;
         for (const MY_SIBLING of mySiblings) {
-            if (MY_SIBLING === me) {
-                continue;
-            }
-
-            let mySiblingClassList = MY_SIBLING.classList;
-            if (!mySiblingClassList) {
-                continue;
-            }
-            // Check if the element's class list contains all the classes of the sibling's class list.
-            let iHaveAtLeastAllTheClassesMySiblingDoes = true;
-            for (const SIBLING_CLASS of mySiblingClassList) {
-                if (HIGHLIGHTED_BOX_SHADOW_ELEMENT_CLASS === SIBLING_CLASS)  // ignore our dashed outline
-                    continue;
-                if (!myClassList.contains(SIBLING_CLASS)) {
-                    iHaveAtLeastAllTheClassesMySiblingDoes = false;
-                    break;
-                }
-            }
-            // Check if the sibling's class list contains all the classes of the element's class list.
-            let mySiblingHasAtLeastAllTheClassesIDo = true;
-            for (const MY_CLASS of myClassList) {
-                if (HIGHLIGHTED_BOX_SHADOW_ELEMENT_CLASS === MY_CLASS)  // ignore our dashed outline
-                    continue;
-                if (!mySiblingClassList.contains(MY_CLASS)) {
-                    mySiblingHasAtLeastAllTheClassesIDo = false;
-                    break;
-                }
-            }
-            // Check if at least one of the siblings has the same class list as the element.
-            let atLeastOneOfMySiblingsHasExactlyTheSameClassListIDo =
-                true &&
-                iHaveAtLeastAllTheClassesMySiblingDoes &&
-                mySiblingHasAtLeastAllTheClassesIDo;
-            if (atLeastOneOfMySiblingsHasExactlyTheSameClassListIDo) {
+            if (MY_SIBLING !== me && MY_SIBLING.tagName === me.tagName &&
+                myClasses.every(c => MY_SIBLING.classList.contains(c))) {
                 isMyClassListUniqueAmongSiblings = false;
                 break;
             }
@@ -788,24 +756,12 @@ class SelectorSet {
             const nodes1 = xpath1.split('/').filter(Boolean);
             const nodes2 = xpath2.split('/').filter(Boolean);
 
-            // Find the first differing node index
-            let diffIndex = -1;
-            for (let i = 0; i < nodes1.length && i < nodes2.length; i++) {
-                if (nodes1[i] !== nodes2[i]) {
-                    diffIndex = i;
-                    break;
-                }
-            }
+            // Remove the index from every node where the first and last match differ. Removing it from the first
+            // difference only kept the last match's index further down, so div[1]/p[1] and div[3]/p[80] became
+            // div/p[80], which names line 80 and not every element of the type.
+            const simplifiedNodes = nodes1.map((node, i) => (i < nodes2.length && node !== nodes2[i]) ? node.split('[')[0] : node);
 
-            // If a differing node index is found, remove index from that node only
-            if (diffIndex >= 0) {
-                const simplifiedNodes = [...nodes1];
-                simplifiedNodes[diffIndex] = simplifiedNodes[diffIndex].split('[')[0];
-                return simplifiedNodes.join('/');
-            }
-
-            // If no differing node index is found, return the original XPath
-            return xpath1;
+            return simplifiedNodes.join('/');
         }
 
         // given an array of elements, remove anything not like the originalElement

@@ -672,9 +672,12 @@ function recordIt(ClickEvent, newAction, realTarget, clickType) {
                 }
         }
 
-        if (true == persistence.getOneSelector) {   // from the menu or extension, to update a selector image we are just getting one we are not recording it, just faux recording...
-            persistence.getOneSelector = false;
-            var jsonSelector = WorkflowStep.getLastWorkflowStep().selectorSet;
+        if (true == Globals.getOneSelector) {   // from the menu or extension, to update a selector image we are just getting one we are not recording it, just faux recording...
+            Globals.getOneSelector = false;
+            // responseStep is the step the background just made from this click. This tab's copy of the workflow
+            // gets it only after its storage reload, so its last step would still be the one before. A duplicate
+            // click makes no step and answers null; its selector is then the last step's, which this tab has.
+            var jsonSelector = responseStep ? responseStep.selectorSet : WorkflowStep.getLastWorkflowStep()?.selectorSet;
             Messaging.sendMessageToBackground({ message: REQUEST.SEND_SELECTOR, selectorSet: jsonSelector });  // in background
             Messaging.messageAllTabs(REQUEST.STOP_RECORDING); //send a message to all tabs to stop recording, this tab got the ONE selector
             persistence.isRecording = false;

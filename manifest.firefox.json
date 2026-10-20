@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "OttoMatic Browser Recorder",
-    "version": "1.0.0.0",
+    "name": "OttoMatic - GPAL Browser Recorder",
+    "version": "1.0.0.1",
     "description": "Records your browser actions as ready-to-edit GPAL C# automation code, with robust CSS/XPath selectors and element screenshots.",
 
     "icons": {
